@@ -1,10 +1,11 @@
 #include "GiveCustomItems.h"
+#include "IApiUtils.h"
 
-bool GiveCustomItems(
+bool ArkLibrary::GiveCustomItems(
 	unsigned long long steamId,
 	std::list<GiveItemDefinition> items)
 {
-	AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
+	AShooterPlayerController* aShooterPC = ArkApi::GetApiUtils().FindPlayerFromSteamId(steamId);
 	if (aShooterPC)
 	{
 		//give items
@@ -19,16 +20,16 @@ bool GiveCustomItems(
 				std::wstring itemName = GetBlueprintNameWideStr(*it2);
 
 				UObject* object = Globals::StaticLoadObject(UObject::StaticClass(), nullptr, itemName.c_str(), nullptr, 0, 0, true);
-				if (object && ((object->GetClassField()->GetClassCastFlagsField() >> 5) & 1))
+				if (object && object->IsA(UClass::StaticClass()))
 				{
 					TSubclassOf<UPrimalItem> archetype;
 					archetype.uClass = reinterpret_cast<UClass*>(object);
 
-					AShooterCharacter* aShooterCharacter = static_cast<AShooterCharacter*>(aShooterPC->GetCharacterField());
+					AShooterCharacter* aShooterCharacter = static_cast<AShooterCharacter*>(aShooterPC->CharacterField()());
 
 					for (int n = 0; n < it->count; n++)
 					{
-						UPrimalItem* item = UPrimalItem::AddNewItem(archetype, aShooterCharacter->GetMyInventoryComponentField(), false, false, it->quality, false, it->quantity, false, 0.0, false, TSubclassOf<UPrimalItem>());
+						UPrimalItem* item = UPrimalItem::AddNewItem(archetype, aShooterCharacter->MyInventoryComponentField()(), false, false, it->quality, false, it->quantity, false, 0.0, false, TSubclassOf<UPrimalItem>());
 					}
 				}
 			}

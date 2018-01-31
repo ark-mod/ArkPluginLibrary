@@ -13,6 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\ARK">
+      <UniqueIdentifier>{2aba5caa-08fc-4139-a388-072db4cea797}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Dependencies">
+      <UniqueIdentifier>{1364bc8f-e17f-4e79-b5b9-9b07c37dc174}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Dependencies">
+      <UniqueIdentifier>{6b30b54b-c37e-4074-ab05-842cd4ff0a8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Dependencies\sqlite_modern_cpp">
+      <UniqueIdentifier>{fecba179-8db4-46ae-ba1a-a29c729251bc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GiveCustomItems.cpp">
@@ -21,8 +33,14 @@
     <ClCompile Include="SpawnCustomDino.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tools.cpp">
+    <ClCompile Include="Utils.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ArkPluginLibrary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\sqlite3.c">
+      <Filter>Source Files\Dependencies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -38,8 +56,32 @@
     <ClInclude Include="ArkPluginLibrary.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tools.h">
+    <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandDefinition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FeatureDefinition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ARK\Actor.h">
+      <Filter>Header Files\ARK</Filter>
+    </ClInclude>
+    <ClInclude Include="ARK\UE.h">
+      <Filter>Header Files\ARK</Filter>
+    </ClInclude>
+    <ClInclude Include="ARK\Enums.h">
+      <Filter>Header Files\ARK</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\sqlite3.h">
+      <Filter>Header Files\Dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\sqlite_modern_cpp\sqlite_modern_cpp.h">
+      <Filter>Header Files\Dependencies\sqlite_modern_cpp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

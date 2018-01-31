@@ -116,16 +116,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ArkPluginLibrary.cpp" />
+    <ClCompile Include="Dependencies\sqlite3.c" />
     <ClCompile Include="GiveCustomItems.cpp" />
     <ClCompile Include="SpawnCustomDino.cpp" />
-    <ClCompile Include="Tools.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ArkPluginLibrary.h" />
+    <ClInclude Include="ARK\Actor.h" />
+    <ClInclude Include="ARK\Enums.h" />
+    <ClInclude Include="ARK\UE.h" />
+    <ClInclude Include="CommandDefinition.h" />
+    <ClInclude Include="Dependencies\sqlite3.h" />
+    <ClInclude Include="Dependencies\sqlite_modern_cpp\sqlite_modern_cpp.h" />
+    <ClInclude Include="FeatureDefinition.h" />
     <ClInclude Include="GiveCustomItems.h" />
     <ClInclude Include="GiveItemsTemplate.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="SpawnCustomDino.h" />
-    <ClInclude Include="Tools.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

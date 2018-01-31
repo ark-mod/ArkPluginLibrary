@@ -1,9 +1,12 @@
 #pragma once
-#include "Tools.h"
+#include "Utils.h"
 #include "GiveItemsTemplate.h"
 #include <list>
 #include <iostream>
 
-bool GiveCustomItems(
-	unsigned long long steamId,
-	std::list<GiveItemDefinition> items);
+namespace ArkLibrary
+{
+	bool GiveCustomItems(
+		unsigned long long steamId,
+		std::list<GiveItemDefinition> items);
+}

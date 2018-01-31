@@ -1,6 +1,7 @@
 #include "SpawnCustomDino.h"
+#include "IApiUtils.h"
 
-bool SpawnCustomDino(
+bool ArkLibrary::SpawnCustomDino(
 	unsigned long long steamId,
 	std::string bpPath, std::string bpPathSaddle,
 	int dinoBaseLevelHealth, int dinoBaseLevelStamina, int dinoBaseLevelOxygen, int dinoBaseLevelFood, int dinoBaseLevelWeight, int dinoBaseLevelMeleeDamage, int dinoBaseLevelMovementSpeed,
@@ -17,7 +18,7 @@ bool SpawnCustomDino(
 {
 	if (bpPath.empty()) return false;
 
-	AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
+	AShooterPlayerController* aShooterPC = ArkApi::GetApiUtils().FindPlayerFromSteamId(steamId);
 	if (aShooterPC)
 	{
 		//todo: does FString release the underlying wchar_t*?
@@ -33,26 +34,27 @@ bool SpawnCustomDino(
 		if (actor && actor->IsA(APrimalDinoCharacter::GetPrivateStaticClass()))
 		{
 			APrimalDinoCharacter* dino = static_cast<APrimalDinoCharacter*>(actor);
+			auto dinoEx = static_cast<ArkExtensions::APrimalDinoCharacter*>(actor);
 
 			if (facingModDegrees > 0.0)
 			{
-				FRotator rot = dino->GetRootComponentField()->GetRelativeRotationField();
+				FRotator rot = dino->RootComponentField()()->RelativeRotationField()();
 				rot.Yaw += facingModDegrees;
-				dino->SetActorRotation(&rot);
+				dino->SetActorRotation(rot); //todo: had to change from &rot with v2 (does it work?)
 			}
 
-			dino->SetAbsoluteBaseLevelField(1); //temp set to 1 in order to avoid random level assignment
+			dino->AbsoluteBaseLevelField() = 1; //temp set to 1 in order to avoid random level assignment
 
-			APlayerState* playerState = aShooterPC->GetPlayerStateField();
-			AShooterPlayerState* shooterPlayerState = static_cast<AShooterPlayerState*>(aShooterPC->GetPlayerStateField());
+			APlayerState* playerState = aShooterPC->PlayerStateField()();
+			AShooterPlayerState* shooterPlayerState = static_cast<AShooterPlayerState*>(aShooterPC->PlayerStateField()());
 
-			dino->SetTamingTeamIDField(aShooterPC->GetTargetingTeamField());
+			dino->TamingTeamIDField() = aShooterPC->TargetingTeamField()();
 
 			FString* playerName = new FString();
 			shooterPlayerState->GetPlayerName(playerName);
 			//NOTE: Getting the player name from playerState->GetPlayerNameField() causes crash
 
-			FString tamer = dino->GetTamerStringField();
+			FString tamer = dino->TamerStringField()();
 			tamer = *playerName;
 
 			//todo: memory leak? playerName not deleted 
@@ -64,23 +66,24 @@ bool SpawnCustomDino(
 			/*__int32 flag = *reinterpret_cast<__int32*>(reinterpret_cast<DWORD64>(dino) + static_cast<DWORD64>(0x128c));
 			*reinterpret_cast<__int32*>(reinterpret_cast<DWORD64>(dino) + static_cast<DWORD64>(0x128c)) = flag | 0x80000;*/
 
-			dino->TameDino(aShooterPC);
+			dino->TameDino(aShooterPC, false, 0); //todo: new arguments in v2 (ignoreMaxTameLimit and overrideTamingTeamId) (does it work?)
 
 			dino->BeginPlay();
 
 			//option: follow
-			if (!follow) dino->SetTamedFollowTargetField(TWeakObjectPtr<AActor>());
+			if (!follow) dino->TamedFollowTargetField() = TWeakObjectPtr<AActor>();
 
 			//option: aggression level
-			dino->SetTamedAggressionLevelField(static_cast<int>(aggressionLevel));
+			dino->TamedAggressionLevelField() = static_cast<int>(aggressionLevel);
 
 			//option: ignore all whistles
-			if (ignoreAllWhistles) dino->SetbIgnoreAllWhistlesField(true);
+			if (ignoreAllWhistles) dinoEx->bIgnoreAllWhistlesField() = true;
 
 			//option: ignore ally look
-			if (ignoreAllyLook) dino->SetbIgnoreAllyLookField(true);
+			if (ignoreAllyLook) dinoEx->bIgnoreAllyLookField() = true;
 
-			UPrimalCharacterStatusComponent* status = dino->GetMyCharacterStatusComponentField();
+			UPrimalCharacterStatusComponent* status = dino->MyCharacterStatusComponentField()();
+			auto statusEx = reinterpret_cast<ArkExtensions::UPrimalCharacterStatusComponent*>(status);
 			if (status)
 			{
 				// 0: health
@@ -96,7 +99,7 @@ bool SpawnCustomDino(
 				// 10: fortitude
 				// 11: crafting speed
 
-				char* stats = status->GetNumberOfLevelUpPointsAppliedField();
+				char* stats = status->NumberOfLevelUpPointsAppliedField()();
 				stats[0] = dinoBaseLevelHealth;
 				stats[1] = dinoBaseLevelStamina;
 				stats[3] = dinoBaseLevelOxygen;
@@ -105,30 +108,30 @@ bool SpawnCustomDino(
 				stats[8] = dinoBaseLevelMeleeDamage;
 				stats[9] = dinoBaseLevelMovementSpeed;
 
-				status->SetBaseCharacterLevelField(1 
+				status->BaseCharacterLevelField() = 1
 					+ dinoBaseLevelHealth 
 					+ dinoBaseLevelStamina 
 					+ dinoBaseLevelOxygen 
 					+ dinoBaseLevelFood 
 					+ dinoBaseLevelWeight 
 					+ dinoBaseLevelMeleeDamage 
-					+ dinoBaseLevelMovementSpeed);
+					+ dinoBaseLevelMovementSpeed;
 
-				status->SetExtraCharacterLevelField(dinoTamedLevelHealth 
+				status->ExtraCharacterLevelField() = dinoTamedLevelHealth
 					+ dinoTamedLevelStamina 
 					+ dinoTamedLevelOxygen 
 					+ dinoTamedLevelFood 
 					+ dinoTamedLevelWeight 
 					+ dinoTamedLevelMeleeDamage 
-					+ dinoTamedLevelMovementSpeed);
+					+ dinoTamedLevelMovementSpeed;
 
 				
 				//NOTE: better to set the actual xp because this call gets scaled by configuration settings for different xp types (generic by default is 2x)
 				//dino->GetMyCharacterStatusComponentField()->AddExperience(status->GetExperienceRequiredForPreviousLevelUp(), false, EXPType::XP_GENERIC);
 				
-				status->SetExperiencePointsField(status->GetExperienceRequiredForPreviousLevelUp());
+				status->ExperiencePointsField() = status->GetExperienceRequiredForPreviousLevelUp();
 
-				char* statsTamed = status->GetNumberOfLevelUpPointsAppliedTamedField();
+				char* statsTamed = status->NumberOfLevelUpPointsAppliedTamedField()();
 				statsTamed[0] = dinoTamedLevelHealth;
 				statsTamed[1] = dinoTamedLevelStamina;
 				statsTamed[3] = dinoTamedLevelOxygen;
@@ -139,12 +142,10 @@ bool SpawnCustomDino(
 
 				//status->SetNumberOfLevelUpPointsAppliedTamedField(stats);
 
-				status->SetbInitializedBaseLevelMaxStatusValuesField(true);
+				statusEx->bInitializedBaseLevelMaxStatusValuesField() = true;
 			}
 
-			//add saddle
-			//todo: what happens if it has no saddle
-			//getting the saddle from the dino class does not seem to be working
+			//getting the saddle from the dino class is not working
 			/*TSubclassOf<UPrimalItem> saddleItemClass = dino->GetSaddleItemClassField();
 
 			std::cout << (saddleItemClass.uClass == NULL ? "saddleItemClass NULL" : "saddleItemClass not null") << "\n";
@@ -160,23 +161,24 @@ bool SpawnCustomDino(
 			delete bpPath;
 			}*/
 
+			//add saddle
 			if (!bpPathSaddle.empty())
 			{
 				std::wstring bpPathSaddleWStr = GetBlueprintNameWideStr(bpPathSaddle);
 
 				UObject* object = Globals::StaticLoadObject(UObject::StaticClass(), nullptr, bpPathSaddleWStr.c_str(), nullptr, 0, 0, true);
 
-				if (object && ((object->GetClassField()->GetClassCastFlagsField() >> 5) & 1))
+				if (object && object->IsA(UClass::StaticClass()))
 				{
 					TSubclassOf<UPrimalItem> archetype;
 					archetype.uClass = reinterpret_cast<UClass*>(object);
 
-					AShooterCharacter* aShooterCharacter = static_cast<AShooterCharacter*>(aShooterPC->GetCharacterField());
+					AShooterCharacter* aShooterCharacter = static_cast<AShooterCharacter*>(aShooterPC->CharacterField()());
 
-					UPrimalItem* saddle = UPrimalItem::AddNewItem(archetype, dino->GetMyInventoryComponentField(), true, false, 0.0, false, 0, false, 0.0, false, TSubclassOf<UPrimalItem>());
+					UPrimalItem* saddle = UPrimalItem::AddNewItem(archetype, dino->MyInventoryComponentField()(), true, false, 0.0, false, 0, false, 0.0, false, TSubclassOf<UPrimalItem>());
 					if (saddleArmor >= 0)
 					{
-						unsigned short* statValues = saddle->GetItemStatValuesField();
+						unsigned short* statValues = saddle->ItemStatValuesField()();
 						if (statValues != nullptr) statValues[1] = (unsigned short)std::floor(((saddleArmor - 25.0) / 5.0) * 1000.0);
 
 						saddle->UpdatedItem();
@@ -193,32 +195,19 @@ bool SpawnCustomDino(
 						TSubclassOf<UPrimalItem> archetype;
 						archetype.uClass = reinterpret_cast<UClass*>(object);
 
-						AShooterCharacter* aShooterCharacter = static_cast<AShooterCharacter*>(aShooterPC->GetCharacterField());
+						AShooterCharacter* aShooterCharacter = static_cast<AShooterCharacter*>(aShooterPC->CharacterField()());
 
 						for (int n = 0; n < it->count; n++)
 						{
-							UPrimalItem* item = UPrimalItem::AddNewItem(archetype, dino->GetMyInventoryComponentField(), false, false, 0.0, false, it->quantity, false, 0.0, false, TSubclassOf<UPrimalItem>());
+							UPrimalItem* item = UPrimalItem::AddNewItem(archetype, dino->MyInventoryComponentField()(), false, false, 0.0, false, it->quantity, false, 0.0, false, TSubclassOf<UPrimalItem>());
 						}
 					}
 				}
-
-				/*v43 = UPrimalItem::AddNewItem(
-				(TSubclassOf<UPrimalItem>)v23,
-				v42->MyInventoryComponent,
-				0,
-				0,
-				qualityOverride,
-				0,
-				1,
-				bForceBlueprint,
-				0.0,
-				0,
-				0i64);*/
 			}
 
 			if (imprint > 0.0)
 			{
-				long long playerId = aShooterPC->GetLinkedPlayerIDField();
+				long long playerId = aShooterPC->LinkedPlayerIDField()();
 				FString* playerName2 = new FString();
 				aShooterPC->GetPlayerCharacterName(playerName2);
 
@@ -231,10 +220,6 @@ bool SpawnCustomDino(
 				dino->UpdateImprintingQuality(0.0);
 			}
 
-			//NOTE: had these before for unknown reasons, but appears to not be required anymore (another way to update base/max stats is to call: status->RescaleAllStats();)
-			//dino->UpdateStatusComponent(0.0);
-			//dino->ForceNetUpdate(false);
-
 			if (status)
 			{
 				/*v75->MaxStatusValues[0] = *(float *)&a2 * v75->MaxStatusValues[0];
@@ -243,9 +228,9 @@ bool SpawnCustomDino(
 				if (*(float *)&a2 < v76->CurrentStatusValues[0])
 				LODWORD(v76->CurrentStatusValues[0]) = (_DWORD)a2;*/
 
-				float* maxStatsValues = status->GetMaxStatusValuesField();
-				float wildRandomScale = dino->GetWildRandomScaleField();
-				float* currentStatValues = status->GetCurrentStatusValuesField();
+				float* maxStatsValues = status->MaxStatusValuesField()();
+				float wildRandomScale = dino->WildRandomScaleField()();
+				float* currentStatValues = status->CurrentStatusValuesField()();
 				currentStatValues[0] = maxStatsValues[0]; //health (calculated as maxStatsValues[0] * wildRandomScale; in server code)
 				currentStatValues[1] = maxStatsValues[1]; //stamina
 				currentStatValues[3] = maxStatsValues[3]; //oxygen

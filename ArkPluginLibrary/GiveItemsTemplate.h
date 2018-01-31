@@ -3,11 +3,14 @@
 #include <list>
 #include <string>
 
-struct GiveItemDefinition
+namespace ArkLibrary
 {
-	std::string blueprint;
-	std::list<std::string> blueprints;
-	int quantity;
-	int count;
-	float quality;
-};
+	struct GiveItemDefinition
+	{
+		std::string blueprint;
+		std::list<std::string> blueprints;
+		int quantity;
+		int count;
+		float quality;
+	};
+}
